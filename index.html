@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <link href="./css/reset.css" rel="stylesheet" />
+    <link href="./css/style.css" rel="stylesheet" />
+  </head>
+  <body>
+    <header class="bar">
+      <div class="container">
+        <span class="brand-badge">NTUA VCD</span>
+      </div>
+    </header>
+
+    <!-- 標題區 -->
+    <section class="hero-strip">
+      <div class="container">
+        <div class="hero-chip">
+          <h1 class="hero-title">設計你的靈感：創意影像工作坊報名</h1>
+          <p class="hero-sub">
+            想學會用影像說故事？這場工作坊帶你從構思走到動態影像，無論是初學者或創作者，都能找到屬於你的節奏與風格。
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 表單區 -->
+    <main class="form-wrap">
+      <div class="container">
+        <form class="enroll-form" action="#" method="post" novalidate>
+          <div class="field">
+            <label for="name" class="label">姓名</label>
+            <input
+              id="name"
+              name="name"
+              type="text"
+              class="input"
+              placeholder="請輸入姓名"
+              required
+            />
+          </div>
+
+          <div class="field">
+            <label for="email" class="label">EMAIL（方便寄送課程資訊）</label>
+            <input
+              id="email"
+              name="email"
+              type="email"
+              class="input"
+              placeholder="請輸入 email"
+              required
+            />
+          </div>
+
+          <fieldset class="field">
+            <legend class="label">想報名的課程</legend>
+            <div class="radio-group">
+              <label class="radio">
+                <input type="radio" name="course" value="c1" checked />
+                <span class="dot" aria-hidden="true"></span>
+                <span class="text"> 課程名稱01 </span>
+              </label>
+
+              <label class="radio">
+                <input type="radio" name="course" value="c2" />
+                <span class="dot" aria-hidden="true"></span>
+                <span class="text">課程名稱02</span>
+              </label>
+
+              <label class="radio">
+                <input type="radio" name="course" value="c3" />
+                <span class="dot" aria-hidden="true"></span>
+                <span class="text">課程名稱03</span>
+              </label>
+            </div>
+          </fieldset>
+
+          <button class="btn-submit" type="submit">送出</button>
+        </form>
+      </div>
+    </main>
+  </body>
+</html>
