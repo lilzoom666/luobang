@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
   <head>
     <meta charset="UTF-8" />
-    <title>按鈕與彈窗範例2</title>
+    <title>按鈕與彈窗與像素小人</title>
     <style>
       * {
         box-sizing: border-box;
@@ -15,6 +15,7 @@
         align-items: center;
         font-family: system-ui, sans-serif;
         background-color: #f5f5f5;
+        overflow: hidden;
       }
 
       #openModalBtn {
@@ -24,6 +25,7 @@
         background-color: #ffffff;
         cursor: pointer;
         font-size: 16px;
+        z-index: 1;
       }
 
       .modal-overlay {
@@ -33,7 +35,7 @@
         justify-content: center;
         align-items: center;
         background: rgba(0, 0, 0, 0.45);
-        z-index: 999;
+        z-index: 500;
       }
       .modal-overlay.show {
         display: flex;
@@ -100,6 +102,39 @@
         line-height: 1.8;
         white-space: pre-line;
       }
+
+      /* 全白淡入遮罩 */
+      #fadeOverlay {
+        position: fixed;
+        inset: 0;
+        background: #ffffff;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 1s ease;
+        z-index: 900;
+      }
+      #fadeOverlay.active {
+        opacity: 1;
+        pointer-events: auto;
+      }
+
+      /* 遊戲畫面容器 */
+      #gameScreen {
+        position: fixed;
+        inset: 0;
+        background: #000;
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 800;
+      }
+
+      #gameCanvas {
+        image-rendering: pixelated;
+        image-rendering: crisp-edges;
+        border: 2px solid #222;
+        background: #120c1f;
+      }
     </style>
   </head>
   <body>
@@ -122,7 +157,6 @@
           不要吸毒，不要踏進去，一次都不要。
         </div>
         <div class="modal-footer">
-          <!-- ✔ 已移除確認按鈕 -->
           <button class="start-btn" id="startTyping">開始</button>
         </div>
       </div>
@@ -144,6 +178,14 @@
       </div>
     </div>
 
+    <!-- 全白淡入 -->
+    <div id="fadeOverlay"></div>
+
+    <!-- 像素小人遊戲畫面 -->
+    <div id="gameScreen">
+      <canvas id="gameCanvas" width="800" height="450"></canvas>
+    </div>
+
     <script>
       const openModalBtn = document.getElementById("openModalBtn");
       const modal1 = document.getElementById("modalOverlay1");
@@ -151,8 +193,13 @@
       const closeX1 = document.getElementById("closeX1");
       const closeX2 = document.getElementById("closeX2");
       const confirm2 = document.getElementById("confirm2");
-      const startTyping = document.getElementById("startTyping");
+      const startTypingBtn = document.getElementById("startTyping");
       const typeContent = document.getElementById("typeContent");
+
+      const fadeOverlay = document.getElementById("fadeOverlay");
+      const gameScreen = document.getElementById("gameScreen");
+      const gameCanvas = document.getElementById("gameCanvas");
+      const ctx = gameCanvas.getContext("2d");
 
       const typingText = [
         "本片以第一人稱視角呈現一名誤入毒品深淵的青年，自述吸毒後身心崩塌的歷程。",
@@ -161,12 +208,12 @@
         "感受悔恨與控訴的真心吶喊。",
       ];
 
+      // 開關彈窗
       openModalBtn.onclick = () => modal1.classList.add("show");
       closeX1.onclick = () => modal1.classList.remove("show");
-
       closeX2.onclick = () => modal2.classList.remove("show");
-      confirm2.onclick = () => modal2.classList.remove("show");
 
+      // 打字機效果
       function startTypewriter() {
         typeContent.textContent = "";
         let lineIndex = 0;
@@ -189,11 +236,185 @@
         typeLine();
       }
 
-      startTyping.onclick = () => {
+      startTypingBtn.onclick = () => {
         modal1.classList.remove("show");
         modal2.classList.add("show");
         startTypewriter();
       };
+
+      // 確認後進入全白 → 像素世界
+      confirm2.onclick = () => {
+        modal2.classList.remove("show");
+        fadeOverlay.classList.add("active");
+
+        // 一秒後顯示遊戲畫面
+        setTimeout(() => {
+          // 隱藏原本按鈕
+          openModalBtn.style.display = "none";
+          gameScreen.style.display = "flex";
+          document.body.style.background = "#000";
+          fadeOverlay.classList.remove("active");
+          startGame();
+        }, 1000);
+      };
+
+      // ===== 像素小人遊戲區 =====
+      const width = gameCanvas.width;
+      const height = gameCanvas.height;
+
+      const groundY = height - 60;
+
+      const player = {
+        x: width / 2 - 8,
+        y: -30, // 從畫面上方掉落
+        w: 18,
+        h: 26,
+        vy: 0,
+        onGround: false,
+        speed: 2.5,
+      };
+
+      const keys = {
+        ArrowLeft: false,
+        ArrowRight: false,
+        ArrowUp: false,
+        ArrowDown: false,
+      };
+
+      window.addEventListener("keydown", (e) => {
+        if (e.key in keys) {
+          keys[e.key] = true;
+          e.preventDefault();
+        }
+      });
+
+      window.addEventListener("keyup", (e) => {
+        if (e.key in keys) {
+          keys[e.key] = false;
+          e.preventDefault();
+        }
+      });
+
+      function drawBackground() {
+        // 暗紫夜空
+        ctx.fillStyle = "#120c1f";
+        ctx.fillRect(0, 0, width, height);
+
+        // 遠方紫色建築塊
+        for (let i = 0; i < width; i += 80) {
+          const buildingHeight = 120 + Math.random() * 80;
+          ctx.fillStyle = "#3a2458";
+          ctx.fillRect(i, height - buildingHeight - 80, 70, buildingHeight);
+
+          // 髒污黃窗
+          for (let w = 10; w < 60; w += 20) {
+            for (let h2 = 10; h2 < buildingHeight - 20; h2 += 24) {
+              if (Math.random() < 0.5) {
+                ctx.fillStyle = "#d2b32f";
+                ctx.fillRect(i + w, height - buildingHeight - 80 + h2, 8, 10);
+              }
+            }
+          }
+        }
+
+        // 近景髒街區
+        for (let i = 0; i < width; i += 40) {
+          ctx.fillStyle = i % 80 === 0 ? "#5b347a" : "#4a305f";
+          ctx.fillRect(i, groundY - 20, 40, 20);
+
+          // 髒污斑點
+          ctx.fillStyle = "rgba(20,10,10,0.6)";
+          ctx.fillRect(i + Math.random() * 30, groundY - 12, 6, 4);
+          ctx.fillRect(i + Math.random() * 30, groundY - 6, 5, 3);
+        }
+
+        // 地面
+        ctx.fillStyle = "#26212f";
+        ctx.fillRect(0, groundY, width, height - groundY);
+
+        // 地面垃圾感
+        for (let i = 0; i < 80; i++) {
+          ctx.fillStyle = Math.random() < 0.5 ? "#91805b" : "#5a4c38";
+          const rx = Math.random() * width;
+          const ry = groundY + Math.random() * 30;
+          ctx.fillRect(rx, ry, 2 + Math.random() * 3, 2 + Math.random() * 2);
+        }
+      }
+
+      function drawPlayer() {
+        const p = player;
+
+        // 身體（紫色）
+        ctx.fillStyle = "#6d3aa8";
+        ctx.fillRect(p.x, p.y + 8, p.w, p.h - 8);
+
+        // 頭（膚色）
+        ctx.fillStyle = "#f0c7a3";
+        ctx.fillRect(p.x + 3, p.y, p.w - 6, 8);
+
+        // 黃色頭髮
+        ctx.fillStyle = "#f7d94b";
+        ctx.fillRect(p.x + 2, p.y - 2, p.w - 4, 4);
+
+        // 腳（深色）
+        ctx.fillStyle = "#1f1b2b";
+        ctx.fillRect(p.x + 3, p.y + p.h, 5, 4);
+        ctx.fillRect(p.x + p.w - 8, p.y + p.h, 5, 4);
+
+        // 簡單陰影
+        ctx.fillStyle = "rgba(0,0,0,0.35)";
+        ctx.fillRect(p.x, p.y + p.h + 6, p.w, 3);
+      }
+
+      function updatePlayer() {
+        const p = player;
+
+        // 掉落
+        if (!p.onGround) {
+          p.vy += 0.3;
+          p.y += p.vy;
+          if (p.y + p.h + 4 >= groundY) {
+            p.y = groundY - p.h - 4;
+            p.vy = 0;
+            p.onGround = true;
+          }
+        } else {
+          // 到地面後可用方向鍵微調位置（類似走路）
+          if (keys.ArrowLeft) p.x -= p.speed;
+          if (keys.ArrowRight) p.x += p.speed;
+          if (keys.ArrowUp) p.y -= p.speed * 0.6; // 上下微小飄移，增加不穩定感
+          if (keys.ArrowDown) p.y += p.speed * 0.6;
+
+          // 簡單邊界限制
+          if (p.x < 10) p.x = 10;
+          if (p.x + p.w > width - 10) p.x = width - 10 - p.w;
+          if (p.y < groundY - 60) p.y = groundY - 60;
+          if (p.y > groundY - p.h - 4) p.y = groundY - p.h - 4;
+        }
+      }
+
+      let gameRunning = false;
+
+      function gameLoop() {
+        if (!gameRunning) return;
+
+        drawBackground();
+        updatePlayer();
+        drawPlayer();
+
+        requestAnimationFrame(gameLoop);
+      }
+
+      function startGame() {
+        gameRunning = true;
+        // 重設角色狀態
+        player.x = width / 2 - 8;
+        player.y = -30;
+        player.vy = 0;
+        player.onGround = false;
+
+        gameLoop();
+      }
     </script>
   </body>
 </html>
